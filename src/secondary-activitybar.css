@@ -1,0 +1,416 @@
+/*
+ * 右端の縦アイコンバー（Antigravity 風）
+ *
+ * Cursor の Editor レイアウトでは、セカンダリサイドバー上部に横並びのタブ列
+ * （.composite-bar-container）が出る。これをウィンドウ右端に固定した縦帯にする。
+ * 縦帯の場所は secondary-activitybar.js が空けている（Cursor から見たウィンドウ幅を縦帯の分だけ狭くしている）。
+ * セカンダリサイドバーを閉じても、縦帯だけは表示し続ける。
+ * 寸法は Antigravity の activitybar に合わせている（幅 42px、項目 42x42、アイコン 18px）。
+ *
+ * ON/OFF は設定 "workbench.secondarySideBar.showLabels" で切り替える。
+ * false のときタブが .icon 表示になり、それを secondary-activitybar.js が見て <html> に
+ * .cursor-custom-strip を付ける。各ルールはこのクラスで限定している。
+ *
+ * 拡張機能アイコン（Claude Code / Codex など）の差し替えは scripts/cursor-custom.js が
+ * インストール済み拡張の SVG から生成して末尾に追記する。
+ */
+
+:root {
+	--csb-width: 42px;
+	--csb-item: 42px;
+	--csb-hit: 30px;
+	--csb-icon: 18px;
+}
+
+/* セカンダリサイドバーを閉じても縦帯の DOM は残っているので、表示だけ残す（中身は隠す） */
+html.cursor-custom-strip .monaco-workbench .split-view-view:not(.visible):has(> .part.auxiliarybar) {
+	display: block !important;
+	width: 0 !important;
+}
+
+html.cursor-custom-strip .monaco-workbench .split-view-view:not(.visible) > .part.auxiliarybar {
+	display: block !important;
+	width: 0 !important;
+}
+
+/* 閉じたセカンダリサイドバーは visibility: hidden になるので、縦帯だけ見えるように戻す */
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar > .title > .composite-bar-container {
+	visibility: visible !important;
+}
+
+html.cursor-custom-strip .monaco-workbench .split-view-view:not(.visible) > .part.auxiliarybar > :not(.title),
+html.cursor-custom-strip .monaco-workbench .split-view-view:not(.visible) > .part.auxiliarybar > .title > :not(.composite-bar-container) {
+	display: none !important;
+}
+
+/* 縦帯 */
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container {
+	position: fixed !important;
+	top: var(--csb-top, 35px);
+	right: 0;
+	bottom: 0;
+	z-index: 30;
+	display: block !important;
+	width: var(--csb-width) !important;
+	height: auto !important;
+	max-width: none !important;
+	margin: 0 !important;
+	box-sizing: border-box;
+	background-color: var(--vscode-activityBar-background, var(--vscode-sideBar-background));
+	border-left: 1px solid var(--vscode-activityBar-border, var(--vscode-sideBar-border, var(--cursor-stroke-primary, transparent)));
+}
+
+/*
+ * Agent レイアウトではセカンダリサイドバーが左に来るので、縦帯も左端に置く
+ * （.cursor-custom-strip-left は secondary-activitybar.js が付ける）。
+ * 画面全体は縦帯の幅だけ右へずらす（幅はスクリプトが innerWidth で縦帯の分だけ狭くしている）。
+ */
+html.cursor-custom-strip.cursor-custom-strip-left .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container {
+	right: auto;
+	left: 0;
+	border-left: none;
+	border-right: 1px solid var(--vscode-activityBar-border, var(--vscode-sideBar-border, var(--cursor-stroke-primary, transparent)));
+}
+
+html.cursor-custom-strip.cursor-custom-strip-left .monaco-workbench {
+	margin-left: var(--csb-width) !important;
+}
+
+/*
+ * 縦帯の上（タイトルバーの高さ）は画面全体を狭めた分の隙間になるので、縦帯を最上部から始め、
+ * その部分をタイトルバーと同じ色で塗る（テーマの色の変数は .monaco-workbench の中でしか使えない）。
+ */
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container {
+	top: 0;
+	padding-top: var(--csb-top, 35px) !important;
+	background-image: linear-gradient(to bottom,
+		var(--vscode-titleBar-activeBackground) var(--csb-top, 35px),
+		transparent var(--csb-top, 35px));
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-scrollable {
+	display: block !important;
+	width: 100% !important;
+	height: 100% !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar,
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar > .monaco-action-bar {
+	width: 100% !important;
+	height: auto !important;
+	overflow: visible !important;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar > .monaco-action-bar .actions-container {
+	flex-direction: column !important;
+	align-items: stretch !important;
+	width: 100% !important;
+	margin: 0 !important;
+	gap: 0 !important;
+}
+
+/* 項目 */
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar > .monaco-action-bar .action-item.composite-bar-action-tab {
+	position: relative;
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: none !important;
+	height: var(--csb-item) !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	flex: 0 0 auto !important;
+}
+
+/* 選択中・ホバーの角丸背景はアイコンを包む要素に付ける（アイコンはマスク画像に差し替えるため） */
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab .composite-bar-action-tab-label {
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto !important;
+	width: var(--csb-hit);
+	height: var(--csb-hit);
+	border-radius: 4px;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab.checked .composite-bar-action-tab-label {
+	background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+/* Cursor がタブに付ける補助アイコン（ターミナル・クラウド表示など）は隠す */
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab .composite-bar-action-tab-label > :not(.action-label) {
+	display: none !important;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab .action-label {
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+	width: var(--csb-icon) !important;
+	height: var(--csb-icon) !important;
+	max-width: none !important;
+	padding: 0 !important;
+	font-size: var(--csb-icon) !important;
+	line-height: var(--csb-icon) !important;
+	color: var(--vscode-activityBar-inactiveForeground) !important;
+	-webkit-mask-image: none !important;
+	mask-image: none !important;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab:hover .action-label,
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab.checked .action-label {
+	color: var(--vscode-activityBar-foreground) !important;
+}
+
+/*
+ * Agent のチャット（codicon-files の項目。チャットごとに 1 つずつ増える）は縦帯から隠す。
+ * 代わりに secondary-activitybar.js が、縦帯に Agent のアイコンを 1 つ（.csb-agent-button）、
+ * 上部にチャットのタブ（.csb-agent-tabs）を作る。
+ */
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab:has(> .composite-bar-action-tab-label > .action-label.codicon-files) {
+	display: none !important;
+}
+
+.monaco-workbench .part.auxiliarybar .csb-agent-button,
+.monaco-workbench .part.auxiliarybar .csb-agent-tabs {
+	display: none;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar > .title > .composite-bar-container > .csb-agent-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--csb-item);
+	cursor: pointer;
+}
+
+/* 縦帯の下部のアカウント（secondary-activitybar.js が置く。Customize ボタンの上） */
+.monaco-workbench .part.auxiliarybar .csb-account-button {
+	display: none;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar > .title > .composite-bar-container > .csb-account-button {
+	position: absolute;
+	right: 0;
+	bottom: calc(26px + var(--csb-item));
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--csb-item);
+	cursor: pointer;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-account-button:hover .csb-agent-button-hit {
+	background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-account-avatar {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	overflow: hidden;
+	border-radius: 50%;
+	background-color: var(--vscode-badge-background);
+	color: var(--vscode-badge-foreground);
+	font-size: 10px;
+	font-weight: 600;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-account-avatar img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* 縦帯の一番下の「Customize」ボタン（secondary-activitybar.js が置く） */
+.monaco-workbench .part.auxiliarybar .csb-customize-button {
+	display: none;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar > .title > .composite-bar-container > .csb-customize-button {
+	position: absolute;
+	right: 0;
+	bottom: 26px;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--csb-item);
+	cursor: pointer;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-customize-button .codicon {
+	font-size: var(--csb-icon);
+	color: var(--vscode-activityBar-inactiveForeground);
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-customize-button .codicon::before {
+	content: "\eae6"; /* extensions（Cursor の Customize と同じアイコン） */
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-customize-button:hover .codicon {
+	color: var(--vscode-activityBar-foreground);
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-customize-button:hover .csb-agent-button-hit {
+	background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-button-hit {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--csb-hit);
+	height: var(--csb-hit);
+	border-radius: 4px;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-button .codicon {
+	font-size: var(--csb-icon);
+	color: var(--vscode-activityBar-inactiveForeground);
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-button .codicon::before {
+	content: "\ec20"; /* robot */
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-button:hover .codicon,
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-button.checked .codicon {
+	color: var(--vscode-activityBar-foreground);
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-button.checked .csb-agent-button-hit {
+	background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+/* 上部のチャットのタブ（Cursor の「Open Chat as Editor Tabs」に似せる） */
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar > .title > .csb-agent-tabs {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
+	gap: 2px;
+	min-width: 0;
+	height: 100%;
+	padding: 0 4px 0 8px;
+	overflow-x: auto;
+	scrollbar-width: none;
+	pointer-events: auto;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar > .title > .csb-agent-tabs::-webkit-scrollbar {
+	display: none;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar > .title > .auxiliary-bar-chat-title {
+	display: none !important;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar > .title > .title-actions {
+	margin-left: auto;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-tab {
+	display: flex;
+	flex: 0 1 auto;
+	align-items: center;
+	gap: 2px;
+	min-width: 48px;
+	max-width: 180px;
+	height: 24px;
+	padding: 0 2px 0 8px;
+	box-sizing: border-box;
+	border-radius: 6px;
+	font-size: 12px;
+	color: var(--vscode-tab-inactiveForeground, var(--vscode-foreground));
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-tab:hover {
+	background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-tab.checked {
+	background-color: var(--vscode-toolbar-hoverBackground);
+	color: var(--vscode-tab-activeForeground, var(--vscode-foreground));
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-tab-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-tab-close {
+	flex: 0 0 auto;
+	padding: 2px;
+	border-radius: 4px;
+	font-size: 14px;
+	opacity: 0;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-tab:hover .csb-agent-tab-close,
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-tab.checked .csb-agent-tab-close {
+	opacity: 0.7;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar .csb-agent-tab-close:hover {
+	opacity: 1;
+	background-color: var(--vscode-toolbar-activeBackground, var(--vscode-toolbar-hoverBackground));
+}
+
+/* タブ用の閉じるボタン・状態表示・下線は縦帯では不要 */
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab .remove-button,
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab .status-indicator,
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab .gradient-overlay,
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .composite-bar-action-tab .active-item-indicator,
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container .scrollbar {
+	display: none !important;
+}
+
+/*
+ * ドラッグ＆ドロップの挿入位置の線。
+ * ドラッグ中、Cursor はタブ列に .dragged-over、ドロップ先の項目に .left（前に入る）/ .right（後ろに入る）を付ける。
+ * 標準の線の CSS は「.composite-bar-container > .composite-bar」を前提にしているが、
+ * セカンダリサイドバーでは間にスクロール要素が挟まり一度も表示されないため、ここで上下の横線として描く。
+ * 前後の判定を上下で行う処理は secondary-activitybar.js。
+ */
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container.dragged-over .composite-bar-action-tab.left::before,
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container.dragged-over .composite-bar-action-tab.right::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	z-index: 3;
+	width: 24px;
+	height: 2px;
+	margin-left: -12px;
+	background-color: var(--vscode-focusBorder);
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container.dragged-over .composite-bar-action-tab.left::before {
+	top: 0;
+}
+
+html.cursor-custom-strip .monaco-workbench .part.auxiliarybar.pane-composite-part > .title > .composite-bar-container.dragged-over .composite-bar-action-tab.right::after {
+	bottom: 0;
+}
+
+/*
+ * 「Show Agents Side Bar」ボタンを隠す（縦帯の ON/OFF に関係なく）。
+ * このツールの配置（Editor レイアウト＋拡張機能をセカンダリサイドバーへ移動）でこれを押すと、Agent 一覧は空のまま開く。
+ * さらにセカンダリサイドバーが Agent 専用の表示に変わって縦帯が消え、このボタン自体も消えるため、閉じる手段がなくなる。
+ * 万一開いたときは secondary-activitybar.js が閉じる。
+ * Cursor 本来の表示（install.cmd で右を OFF にした状態）ではセカンダリサイドバーが .using-embedded-editor-part になり、
+ * このボタンは正しく動くので隠さない。
+ */
+.monaco-workbench .part.auxiliarybar.pane-composite-part:not(.using-embedded-editor-part) > .title .auxiliary-bar-title-sidebar-toggle {
+	display: none !important;
+}
